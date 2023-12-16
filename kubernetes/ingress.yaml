@@ -1,0 +1,22 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: momo-frontend
+spec:
+  ingressClassName: "nginx"
+  tls:
+    - hosts:
+        - momo.sergeyognev.com
+      secretName: sergeyognev-com-tls
+  rules:
+  - host: momo.sergeyognev.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: momo-frontend
+            port:
+              number: 80

@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  revisionHistoryLimit: 15
+  # Стратегия развёртывания. Recreate — удалит сначала все старые Pod'ы
+  # Есть и более гибкая стратегии, например, RollingUpdate, которая будет обновлять Pod'ы порциями
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: {{ .Values.frontend.affinity.weight }}
+              preference:
+                # предпочтение по развертыванию в определенной зоне
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - {{ .Chart.Name }}
+
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      volumes:
+        - name: frontend-cm-volume
+          configMap:
+            name: frontend-cm
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.image.repository }}/{{ .Values.frontend.image }}:{{ .Values.frontend.version }}
+          securityContext:
+            privileged: true
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: {{ .Chart.Name }}
+              containerPort: 8080
+          volumeMounts:
+            - name: frontend-cm-volume
+              mountPath: /etc/nginx/templates/default.conf.template
+              subPath: default.conf.template
+            - name: dockersock
+              mountPath: /var/run/docker.sock
+      imagePullSecrets:
+        - name: docker-config-secret-frontend

@@ -1,0 +1,5 @@
+---
+slack_hook_url: 'https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/xxxxxxxxxxx'
+slack_channel: '#dvs_NN_notifications'
+bot_token: '5933756043:AAE8JLL5KIzgrNBeTP5e-1bkbJy4YRoeGjs'
+chat_id: '-1001763459775'

@@ -1,0 +1,2 @@
+host: "grafana.sergeyognev.com"
+tlsSecret: sergeyognev-com-tls

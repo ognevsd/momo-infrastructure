@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: momo-frontend
+  labels:
+    app: momo-frontend
+spec:
+  replicas: 1
+  revisionHistoryLimit: 15
+  # Стратегия развёртывания. Recreate — удалит сначала все старые Pod'ы
+  # Есть и более гибкая стратегии, например, RollingUpdate, которая будет обновлять Pod'ы порциями
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: momo-frontend
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 80
+              preference:
+                # предпочтение по развертыванию в определенной зоне
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - momo-frontend
+
+    metadata:
+      labels:
+        app: momo-frontend
+    spec:
+      volumes:
+        - name: frontend-cm-volume
+          configMap:
+            name: frontend-cm
+        - name: dockersock
+          hostPath:
+            path: /var/run/docker.sock
+      containers:
+        - name: momo-frontend
+          image: gitlab.praktikum-services.ru:5050/std-017-008/momo-store/momo-frontend:1.0.950780
+          securityContext:
+            privileged: true
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: momo-frontend
+              containerPort: 8080
+          volumeMounts:
+            - name: frontend-cm-volume
+              mountPath: /etc/nginx/templates/default.conf.template
+              subPath: default.conf.template
+            - name: dockersock
+              mountPath: /var/run/docker.sock
+      imagePullSecrets:
+        - name: docker-config-secret-frontend

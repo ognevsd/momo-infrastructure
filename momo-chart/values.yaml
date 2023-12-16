@@ -1,0 +1,22 @@
+backend:
+  version: 1.0.959001
+  image: momo-backend
+  replicas: 1
+  revisionHistoryLimit: 15
+  port: 8081
+  RollingUpdate:
+    maxUnavailable: 80%
+    maxSurge: 20%
+frontend:
+  version: 1.0.950780
+  image: momo-frontend
+  host: momo.sergeyognev.com
+  secret: sergeyognev-com-tls
+  replicas: 1
+  revisionHistoryLimit: 15
+  port: 80
+  affinity:
+    weight: 80
+image:
+  repository: gitlab.praktikum-services.ru:5050/std-017-008/momo-store
+  pullPolicy: IfNotPresent

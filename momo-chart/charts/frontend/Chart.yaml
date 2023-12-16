@@ -1,0 +1,16 @@
+apiVersion: v1
+name: momo-frontend
+version: 0.1.0
+appVersion: 1.0.836014
+description: Frontend for the momo store
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: momo-frontend
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+    app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    app.kubernetes.io/component: momo-frontend
+    app.kubernetes.io/part-of: momo-store
+    env: "{{ .Values.environment }}" 

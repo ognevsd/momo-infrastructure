@@ -1,0 +1,16 @@
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+  storage:
+    type: 'filesystem'
+singleBinary:
+  replicas: 1
+# gateway:
+#   nginxConfig:
+#     customReadUrl: "loki.sergeyognev.com"
+ingress:
+  enabled: true
+  ingressClassName: "nginx"
+  hosts:
+    - "loki.sergeyognev.com"
