@@ -1,17 +1,16 @@
 # momo-infrastructure
 
-Контакт: https://app.pachca.com/chats/6026813  
-ping: @ognev
+> [!NOTE]
+> Application and supporting services are currently not deployed
 
-## Основные сервисы
+## Main Services
 
-- Приложение: [momo.sergeyognev.com](https://momo.sergeyognev.com)
+- Aplication: [momo.sergeyognev.com](https://momo.sergeyognev.com)
 - ArgoCD: [argocd.sergeyognev.com](https://argocd.sergeyognev.com)
 - Grafana: [grafana.sergeyognev.com](https://grafana.sergeyognev.com)
 - Prometheus: [prometheus.sergeyognev.com](https://prometheus.sergeyognev.com)
-- Репозиторий с кодом приложения: [GitLab](https://gitlab.praktikum-services.ru/std-017-008/momo-store)
 
-## Структура проекта
+## Project structure
 
 ```
 ├── kubernetes
@@ -39,30 +38,29 @@ ping: @ognev
 ```
 
 1. kubernetes
-   1. argo - манифест для Igress argo
-   2. backend - манифесты для деплоя backend
-   3. certificate - манифесты для автоматического выпуска и обновления TLS сертификата
-   4. frontand - манифесты для деплоя frontend
-2. momo-chart - Helm чарты для деплоя приложения, используются ArgoCD
-3. monitoring - Копия созданых яндексом чартов сервисов мониторинга. Основное изменение.
-внесенное в чарты - замена хостов в Ingress и добавление сертификата
-4. terraform-k8s - IaC файлы для создания managed k8s кластера в Яндекс Облаке
-5. terraform-s3 - IaC файлы для создания Object Storage в Яндекс Облаке
+   1. argo - manifest for Argo ingress
+   2. backend - manifests to deploy backend
+   3. certificate - manifests for automatic issue and update of TLS certificate
+   4. frontend - manifests to deploy frontend
+2. momo-chart - Helm charts that are used by Argo to deloy the application
+3. monitoring - Charts for monitoring services
+4. terraform-k8s - IaC files for creating manages k8s in Yandex Cloud
+5. terraform-s3 - IaC for creating S3-like object storage in Yandex Cloud
 
-## Деплой
+## Deploying
 
-### Создание k8s кластера
-1. Установить [yc CLI](https://cloud.yandex.com/en/docs/cli/quickstart) и зарегистрироваться
-2. Узнать токен:
+### Creating k8s cluster
+1. Install [yc CLI](https://cloud.yandex.com/en/docs/cli/quickstart) and login
+2. Get token:
 ```bash
 yc config list
 ```
-3. Добавить токен в переменную
+3. Add token to env variable
 ```bash
 export YC_TOKEN=<your token>
 ```
-4. Перейти в директорию `terraform-k8s`
-5. Выполнить следующие команды
+4. Navigate to  `terraform-k8s`
+5. Run following commands
 ```bash
 terraform init
 ```
@@ -75,10 +73,10 @@ terraform plan
 terraform apply
 ```
 
-### Создание Object Storage
+### Creating Object Storage
 
-1. Перейти в директорию `terraform-s3`
-2. Выполнить следующие команды
+1. Navigate to `terraform-s3`
+2. Run following commands
 
 ```bash
 terraform init
@@ -94,36 +92,42 @@ terraform apply
 
 ### Cert-manager
 
-Для того чтобы приложение получило TLS сертификат от Let's Encrypt будет использоваться Cert-Manager и DNS01-challenge. В результате будет получен wildcard-сертификат для всех доменов `*.sergeyognev.com`. DNS-провайдером является Cloudflare.
+For TLS certificate from Let's Encrypt, Cart-Manager and DNS01-challenge are used.
+As a result, wildcard-certificate for all domens under `*.sergeyognev.com` will be received.
+Cloudflare will be acting as DNS-provider.
 
-1. Установть cert-manager
+1. Install cert-manager
 ```bash
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.yaml
 ```
 
-2. Проверить что cert-manager установлен корректно
+2. Check that cert-manager is installed correctly
 ```bash
 kubectl get pods --namespace cert-manager
 ```
 
-3. Получите Cloudflare API token на сайте Cloudflare, добавьте его в `kubernetes/certificate/cloudflare-api-token.yaml` и создайте секрет. Токен должен обладать следующими правами:
+3. Receive Cloudflare API token from Cloudflare, add it to `kubernetes/certificate/cloudflare-api-token.yaml`
+and create a secret. Token should have following permissions:
 
 ![cloudflare_token](img/cloudflare_token.png)
 
 ```bash
 kubectl apply -f cloudflare-api-token.yaml
 ```
-Т.к. в секрете используется поле `stringData`, токен должен быть добавлен как текст. БЕЗ `base64` encode
+`stringData` field is used in the secret, so token should be added as plain text
+without `base64` encoding
 
-4. Установите cluster issuer
+
+4. Install cluster issuer
 
 ```bash
 kubectl apply -f clusterissuer-prod.yaml
 ```
 
-Сначала рекомендуется установить staging cluster issuer, для того чтобы не привысить Let's Encrypt лимиты. Если испытание будет пройдено успешно, замените `staging` на `prod`.
+It is recommended to first install the staging cluster issuer to avoid exceeding
+Let’s Encrypt limits. If the test is successful, replace staging with prod.
 
-5. Проверьте cluster issuer
+5. Check cluster issuer
 ```bash
 kubectl get clusterissuer
 ```
@@ -132,25 +136,25 @@ kubectl get clusterissuer
 kubectl describe clusterissuer <name>
 ```
 
-6. Добавьте wildcard certificate
+6. Add wildcard certificate
 ```bash
 kubectl apply -f wildcard-certificate.yaml
 ```
 
-7. Проверьте certificate
+7. Check certificate
 
 ```bash
 kubectl get certificate
 ```
 
-8. Для устранения багов изучите лог испытания (при необходимости)
+8. To troubleshoot bugs, review the test log (if necessary).
 ```bash
 kubect describe challenge
 ```
 
-### Установка ArgoCD
+### Install ArgoCD
 
-1. Установите ArgoCD
+1. Install ArgoCD
 2. 
 ```bash
 kubectl create namespace argocd
@@ -160,64 +164,66 @@ kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-2. Создайте Ingress для ArgoCD
+2. Create Ingress for ArgoCD
 
 ```bash
 kubectl apply -f argo/argo-ingress.yaml
 ```
 
-3. Скопируйте сертификат из `default` namespace в `argocd` namespace (Самый глупый метод, который пришел в голову)
-	1. Выведите сертификат в консоль
-	2. Скопируйте все данные в новый `yaml` файл
-	3. Измените namespace в файле
-	4. Создайте секрет в новом namespace
+3. Copy the certificate from the default namespace to the argocd namespace (the simplest method that came to mind):
+   1. Output the certificate to the console.
+   2. Copy all the data into a new yaml file.
+   3. Change the namespace in the file.
+   4. Create a secret in the new namespace.
+
 
 ```bash
 kubectl get secret sergeyognev-com-tls -oyaml
 ```
 
-4. Дефолтный пароль для ArgoCD
+4. Create default password for ArgoCD
  
 ```bash
 argocd admin initial-password -n argocd
 ```
 
-5. Зарегестрируйтесь через CLI
+5. Register via CLI
 ```bash
 argocd login argocd.sergeyognev.com
 ```
-6. Добавьте ваш кластер
+6. Add your cluster
 ```bash
 argocd cluster add <context name> --server argocd.sergeyognev.com
 ```
 
-### Деплой приложения
-1. Добавьте ваш GitLab репозиторий в ArgoCD
-2. Установите приложения из чарта
-3. Должен получиться следующий результат:
+### Deploy app
+1. Add your repo to ArgoCD
+2. Install application, using Helm-chart
+3. Following result is expected
 
 ![ArgoCD](img/argocd.png)
 
-### Установка систем мониторинга и логирования
+### Install monitoring and logging systems
 
-1. Перейдите в директорию `monitoring`
-2. Установите ClusterRoleBinding для того чтобы Prometheus мог увидеть информацию от приложения
+1. Navigate to  `monitoring` dorectory
+2. Install ClusterRoleBinging for Prometheus (to see data from application)
 ```bash
 kubectl apply -f access.yaml
 ```
-3. Установите Prometheus
+3. Install Prometheus
 ```bash
 helm upgrade --atomic --install prometheus prometheus 
 ```
-4. Установите Grafana
+4. Install Grafana
 ```bash
 helm upgrade --atomic --install grafana grafana 
 ```
-5. [Установите](https://grafana.com/docs/loki/latest/setup/install/helm/install-monolithic/) Loki
+5. [Install](https://grafana.com/docs/loki/latest/setup/install/helm/install-monolithic/) Loki
 ```bash
 helm install --values loki.yaml loki grafana/loki
 ```
-6. [Установите](https://grafana.com/docs/loki/latest/send-data/promtail/installation/) Promtail
+
+6. [Install](https://grafana.com/docs/loki/latest/send-data/promtail/installation/) Promtail
 ```bash
 helm upgrade --install promtail grafana/promtail
 ```
